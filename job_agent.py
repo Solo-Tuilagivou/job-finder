@@ -8,7 +8,7 @@ What it does, on every run:
      searches SPC/Digicel careers + a Suva tech watchlist via Google CSE.
   2. Keeps only Fiji-based roles that match your skill profile (Laravel / PHP /
      full-stack and the broader ICT terms in KEYWORDS), and lists Suva first.
-  3. Removes duplicates, and (optionally) hides jobs it already emailed you before.
+  3. Removes duplicates within the run.
   4. Emails you one tidy HTML digest.
 
 Designed to be set up once and left to run on a schedule (GitHub Actions cron or
@@ -70,15 +70,10 @@ EMAIL_USER         = os.environ.get("EMAIL_USER", "")          # your gmail addr
 EMAIL_APP_PASSWORD = os.environ.get("EMAIL_APP_PASSWORD", "")  # 16-char app password
 
 # Only consider jobs posted within this many days (where a date is available).
-# Fiji posts less frequently than global boards, so the window is a little wider;
-# cross-run de-dupe means a wider window still won't re-email the same role.
+# Fiji posts less frequently than global boards, so the window is a little wider.
 MAX_AGE_DAYS = int(os.environ.get("MAX_AGE_DAYS", "7"))
 
-# Hide jobs already sent in previous runs (keeps the seen-cache file below).
-DEDUPE_ACROSS_RUNS = os.environ.get("DEDUPE_ACROSS_RUNS", "true").lower() == "true"
-SEEN_FILE = os.environ.get("SEEN_FILE", "seen.json")
-
-# Send an email even when there are zero new matches? Default: skip (no noise).
+# Send an email even when there are zero matches? Default: skip (no noise).
 SEND_WHEN_EMPTY = os.environ.get("SEND_WHEN_EMPTY", "false").lower() == "true"
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (job-digest-agent; personal use)"}
@@ -172,7 +167,7 @@ def _parse_date(value):
 
 def _fresh_enough(date_obj) -> bool:
     if date_obj is None:
-        return True  # keep undated jobs; cross-run dedupe handles repeats
+        return True  # keep undated jobs
     return (_now() - date_obj).days <= MAX_AGE_DAYS
 
 
@@ -321,20 +316,6 @@ def collect():
     return kept
 
 
-def filter_already_sent(jobs):
-    if not DEDUPE_ACROSS_RUNS:
-        return jobs, set()
-    previously = set()
-    if os.path.exists(SEEN_FILE):
-        try:
-            previously = set(json.load(open(SEEN_FILE)))
-        except Exception:
-            previously = set()
-    new = [j for j in jobs if (j["url"] or _norm(j["title"], j["company"])) not in previously]
-    updated = previously | {(j["url"] or _norm(j["title"], j["company"])) for j in jobs}
-    return new, updated
-
-
 def build_html(jobs):
     today = _now().strftime("%A %d %B %Y")
     by_source = {}
@@ -363,7 +344,7 @@ def build_html(jobs):
 
     return f"""\
 <div style="font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;max-width:680px;margin:auto;">
-  <h2 style="color:#0f2942;margin-bottom:2px;">Your Fiji job digest &mdash; {len(jobs)} new match{'es' if len(jobs)!=1 else ''}</h2>
+  <h2 style="color:#0f2942;margin-bottom:2px;">Your Fiji job digest &mdash; {len(jobs)} match{'es' if len(jobs)!=1 else ''}</h2>
   <p style="color:#777;margin-top:0;font-size:14px;">{today} &middot; Fiji vacancies, Suva first</p>
   <table style="border-collapse:collapse;width:100%;border:1px solid #e6e6e6;font-size:14px;">
     <tr><th align="left" style="padding:8px 14px;color:#888;font-size:12px;">ROLE / COMPANY</th>
@@ -384,7 +365,7 @@ def send_email(html, count):
         print(html[:1500])
         return
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"[Fiji jobs] {count} new match{'es' if count!=1 else ''} — {_now():%d %b}"
+    msg["Subject"] = f"[Fiji jobs] {count} match{'es' if count!=1 else ''} — {_now():%d %b}"
     msg["From"] = EMAIL_USER
     msg["To"] = RECIPIENT
     msg.attach(MIMEText(html, "html"))
@@ -400,17 +381,12 @@ def main():
     jobs = collect()
     print(f"Matched {len(jobs)} relevant jobs across all sources.")
 
-    new, updated = filter_already_sent(jobs)
-    print(f"{len(new)} are new since the last run.")
-
-    if not new and not SEND_WHEN_EMPTY:
-        print("No new jobs — skipping email.")
+    # Always send the full digest of current matches. (Set SEND_WHEN_EMPTY to
+    # also send when there are zero matches at all.)
+    if not jobs and not SEND_WHEN_EMPTY:
+        print("No matching jobs — skipping email.")
     else:
-        send_email(build_html(new or jobs), len(new or jobs))
-
-    if DEDUPE_ACROSS_RUNS:
-        json.dump(sorted(updated), open(SEEN_FILE, "w"))
-        print(f"Saved {len(updated)} keys to {SEEN_FILE}.")
+        send_email(build_html(jobs), len(jobs))
 
 
 if __name__ == "__main__":

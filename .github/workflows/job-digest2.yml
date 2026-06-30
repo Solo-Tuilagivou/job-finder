@@ -17,13 +17,6 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - name: Restore seen-cache
-        uses: actions/cache/restore@v4
-        with:
-          path: seen.json
-          key: seen-${{ github.run_id }}
-          restore-keys: seen-
-
       - name: Run agent
         env:
           RECIPIENT: ${{ secrets.RECIPIENT }}
@@ -33,10 +26,3 @@ jobs:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           GOOGLE_CX: ${{ secrets.GOOGLE_CX }}
         run: python job_agent.py
-
-      - name: Save seen-cache
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: seen.json
-          key: seen-${{ github.run_id }}
