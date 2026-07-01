@@ -3,7 +3,9 @@ name: Job digest
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 20 * * *"
+    # Fiji is UTC+12 (no DST). Times below are in UTC.
+    - cron: "0 21 * * *"   # 09:00 FJT
+    - cron: "0 3 * * *"    # 15:00 FJT
 
 jobs:
   digest:

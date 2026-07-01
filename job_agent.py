@@ -40,28 +40,45 @@ except Exception:  # pragma: no cover - optional dependency
 # --------------------------------------------------------------------------- #
 
 # Words that mark a job as relevant. A job matches if ANY of these appears in
-# its title or tags (case-insensitive). Tuned to the attached CV, then broadened
-# to catch the way Fiji employers phrase ICT/tech roles.
+# its title or tags (case-insensitive). Scoped tightly to the IT space only:
+# software development, IT support, AI/automation, and core IT infrastructure.
+# Deliberately avoids bare generic words ("digital", "systems", "applications",
+# "web", "network", "data") that were pulling in non-IT roles (marketing,
+# operations, admin, etc.). Where a term is ambiguous it's qualified with its
+# role suffix (e.g. "systems administrator" not bare "systems").
 KEYWORDS = [
-    # core dev stack (from the CV)
-    "laravel", "php", "livewire", "full stack", "full-stack", "fullstack",
-    "backend", "back end", "back-end", "software engineer", "software developer",
-    "web developer", "developer", "programmer", "postgres", "postgresql",
-    "typescript", "javascript", "angular", "ionic", "api developer", "python",
-    # broader ICT phrasing common on Fiji job boards
-    "ict", "i.t", "information technology", "it officer", "it support",
-    "systems", "system administrator", "sysadmin", "network", "database",
-    "dba", "helpdesk", "help desk", "technical support", "it technician",
-    "applications", "web", "data analyst", "business intelligence", "power bi",
-    "power platform", "dynamics", "erp", "digital", "cyber", "devops",
-    "qa engineer", "tester", "automation",
+    # --- Software development ---
+    "software developer", "software engineer", "web developer",
+    "application developer", "applications developer", "api developer",
+    "mobile developer", "full stack", "full-stack", "fullstack",
+    "backend developer", "back-end developer", "frontend developer",
+    "front-end developer", "developer", "programmer", "software development",
+    # dev stack (from the CV)
+    "laravel", "php", "livewire", "python", "javascript", "typescript",
+    "angular", "ionic", "postgres", "postgresql", "react", "node",
+    # --- IT support / helpdesk ---
+    "it support", "ict support", "it officer", "ict officer", "it assistant",
+    "it technician", "ict technician", "helpdesk", "help desk",
+    "technical support", "service desk", "desktop support", "it administrator",
+    # --- AI & automation ---
+    "artificial intelligence", "ai engineer", "machine learning",
+    "ml engineer", "automation engineer", "automation", "rpa",
+    "robotic process automation", "prompt engineer", "data scientist",
+    # --- Core IT infrastructure / general IT ---
+    "information technology", "ict", "systems administrator",
+    "system administrator", "sysadmin", "systems analyst", "systems engineer",
+    "network administrator", "network engineer", "network technician",
+    "database administrator", "dba", "devops", "cloud engineer",
+    "cloud administrator", "cybersecurity", "cyber security",
+    "information security", "qa engineer", "software tester",
 ]
 
 # If any of these appears in the title, the job is dropped (avoid obvious noise).
-# Trimmed to seniority/management only — in Fiji's smaller market we don't want
-# to exclude roles just because of the stack (.NET, C#, etc. are all worth seeing).
+# Seniority/management terms plus a couple of non-IT look-alikes that share a
+# keyword (e.g. "business development" isn't dev; "property developer" isn't IT).
 EXCLUDE = [
     "senior staff", "principal", "director", "head of", "chief ",
+    "business development", "property developer", "land developer",
 ]
 
 # Recipient + Gmail sender. Override with env vars / GitHub secrets in production.

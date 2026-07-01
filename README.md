@@ -1,8 +1,9 @@
 # Fiji job digest agent
 
-A small script that scans **Fiji** job postings every day, keeps the ICT/tech
-roles that fit your stack (Laravel / PHP / full-stack plus broader ICT terms),
-lists **Suva** roles first, and emails you a tidy digest. No paid services.
+A small script that scans **Fiji** job postings twice a day, keeps only
+**IT-space** roles — software development, IT support, AI/automation and core IT
+infrastructure — lists **Suva** roles first, and emails you a tidy digest. No
+paid services.
 
 ## Where the jobs come from
 - **MyjobsFiji** (the backbone) — scraped via its public `sitemap.xml`, then each
@@ -36,7 +37,7 @@ and Suva-area roles are sorted to the top.
    - *(optional)* `GOOGLE_API_KEY` + `GOOGLE_CX` to enable the SPC/Digicel +
      Suva-watchlist supplement.
 3. Go to the **Actions** tab → "Job digest" → **Run workflow** to test it now.
-   After that it runs itself every morning (8am Fiji time) until you disable it.
+   After that it runs itself twice a day (9am and 3pm Fiji time) until you disable it.
 
 ## Option B — Run locally on a schedule
 ```bash
