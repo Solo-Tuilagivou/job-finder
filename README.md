@@ -56,7 +56,8 @@ Open `job_agent.py` and edit:
 - `KEYWORDS` — what counts as a tech/ICT match. Empty it out (or add `"*"`-style
   broad terms) if you want *all* Fiji vacancies, not just tech.
 - `EXCLUDE` — titles to drop (seniority/management noise by default).
-- `MAX_AGE_DAYS` — how recent a posting must be (default 7).
+- Freshness — postings are kept back to the **1st of the previous month** (a
+  rolling window). Adjust `_first_of_previous_month()` if you want a different floor.
 - `SUVA_AREA` / `FIJI_CITIES` — which places count as Suva vs. the rest of Fiji.
 - `MYJOBSFIJI_MAX` — how many of the newest postings to inspect per run.
 

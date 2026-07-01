@@ -86,9 +86,10 @@ RECIPIENT          = os.environ.get("RECIPIENT", "tuilagivousolo@gmail.com")
 EMAIL_USER         = os.environ.get("EMAIL_USER", "")          # your gmail address
 EMAIL_APP_PASSWORD = os.environ.get("EMAIL_APP_PASSWORD", "")  # 16-char app password
 
-# Only consider jobs posted within this many days (where a date is available).
-# Fiji posts less frequently than global boards, so the window is a little wider.
-MAX_AGE_DAYS = int(os.environ.get("MAX_AGE_DAYS", "7"))
+# Freshness floor. Jobs are kept if posted on/after the FIRST day of the PREVIOUS
+# calendar month — a rolling window that always reaches back through last month
+# (e.g. on any day in July, it keeps everything posted since 1 June). Fiji posts
+# infrequently, so this wider, calendar-based window avoids missing roles.
 
 # Send an email even when there are zero matches? Default: skip (no noise).
 SEND_WHEN_EMPTY = os.environ.get("SEND_WHEN_EMPTY", "false").lower() == "true"
@@ -182,10 +183,18 @@ def _parse_date(value):
     return None
 
 
+def _first_of_previous_month():
+    """Midnight UTC on the 1st of last month (the freshness floor)."""
+    first_this_month = _now().replace(day=1, hour=0, minute=0, second=0,
+                                      microsecond=0)
+    last_month_end = first_this_month - dt.timedelta(days=1)
+    return last_month_end.replace(day=1)
+
+
 def _fresh_enough(date_obj) -> bool:
     if date_obj is None:
         return True  # keep undated jobs
-    return (_now() - date_obj).days <= MAX_AGE_DAYS
+    return date_obj >= _first_of_previous_month()
 
 
 def _norm(title, company):
